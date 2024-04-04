@@ -3,12 +3,13 @@
 use super::common::{Authorization, JsonRpcError, Request, Response};
 use crate::{errors::ProviderError, JsonRpcClient};
 use async_trait::async_trait;
-use reqwest::{header::HeaderValue, Client, Error as ReqwestError};
+use reqwest::{header::{HeaderValue, InvalidHeaderValue}, Client, Error as ReqwestError};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     str::FromStr,
     sync::atomic::{AtomicU64, Ordering},
 };
+// use http::header::InvalidHeaderValue;
 use thiserror::Error;
 use url::Url;
 
@@ -161,8 +162,8 @@ impl Provider {
     pub fn new_with_auth(
         url: impl Into<Url>,
         auth: Authorization,
-    ) -> Result<Self, HttpClientError> {
-        let mut auth_value = HeaderValue::from_str(&auth.to_string())?;
+    ) -> Result<Self, ReqwestError> {
+        let mut auth_value = HeaderValue::from_str(&auth.to_string()).unwrap_or_else(|e| HeaderValue::from(0));
         auth_value.set_sensitive(true);
 
         let mut headers = reqwest::header::HeaderMap::new();

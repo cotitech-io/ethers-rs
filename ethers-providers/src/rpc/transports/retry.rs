@@ -48,9 +48,9 @@ pub trait RetryPolicy<E>: Send + Sync + Debug {
 /// ```
 #[derive(Debug)]
 pub struct RetryClient<T>
-where
-    T: JsonRpcClient,
-    T::Error: crate::RpcError + Sync + Send + 'static,
+    where
+        T: JsonRpcClient,
+        T::Error: crate::RpcError + Sync + Send + 'static,
 {
     inner: T,
     requests_enqueued: AtomicU32,
@@ -67,16 +67,16 @@ where
 }
 
 impl<T> RetryClient<T>
-where
-    T: JsonRpcClient,
-    T::Error: Sync + Send + 'static,
+    where
+        T: JsonRpcClient,
+        T::Error: Sync + Send + 'static,
 {
     /// Creates a new `RetryClient` that wraps a client and adds retry and backoff support
     ///
     /// # Example
     ///
     /// ```
-    /// 
+    ///
     /// # async fn demo() {
     /// use ethers_providers::{Http, RetryClient, HttpRateLimitRetryPolicy};
     /// use std::time::Duration;
@@ -160,9 +160,9 @@ impl RetryClientBuilder {
 
     /// Creates the `RetryClient` with the configured settings
     pub fn build<T>(self, client: T, policy: Box<dyn RetryPolicy<T::Error>>) -> RetryClient<T>
-    where
-        T: JsonRpcClient,
-        T::Error: Sync + Send + 'static,
+        where
+            T: JsonRpcClient,
+            T::Error: Sync + Send + 'static,
     {
         let RetryClientBuilder {
             timeout_retries,
@@ -249,16 +249,16 @@ impl From<RetryClientError> for ProviderError {
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 impl<T> JsonRpcClient for RetryClient<T>
-where
-    T: JsonRpcClient + 'static,
-    T::Error: Sync + Send + 'static,
+    where
+        T: JsonRpcClient + 'static,
+        T::Error: Sync + Send + 'static,
 {
     type Error = RetryClientError;
 
     async fn request<A, R>(&self, method: &str, params: A) -> Result<R, Self::Error>
-    where
-        A: Debug + Serialize + Send + Sync,
-        R: DeserializeOwned + Send,
+        where
+            A: Debug + Serialize + Send + Sync,
+            R: DeserializeOwned + Send,
     {
         // Helper type that caches the `params` value across several retries
         // This is necessary because the wrapper provider is supposed to skip he `params` if it's of
@@ -393,7 +393,8 @@ impl RetryPolicy<ClientError> for HttpRateLimitRetryPolicy {
 
         match error {
             ClientError::ReqwestError(err) => {
-                err.status() == Some(http::StatusCode::TOO_MANY_REQUESTS)
+                // err.status() == Some(http::StatusCode::TOO_MANY_REQUESTS)
+                err.status() == Some(reqwest::StatusCode::TOO_MANY_REQUESTS)
             }
             ClientError::JsonRpcError(err) => should_retry_json_rpc_error(err),
             ClientError::SerdeJson { text, .. } => {
